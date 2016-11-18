@@ -12,14 +12,14 @@
         
     } else if ((array_key_exists("user_id", $_SESSION) AND $_SESSION['user_id']) OR (array_key_exists("user_id", $_COOKIE) AND $_COOKIE['user_id'])) {
         
-        header("Location: loggedinpage.php");
+        header("Location: loggedinPage.php");
         
     }
 
     if (array_key_exists("submit", $_POST)) {
         
-        include ("connection.php");
-
+        include('connection.php');
+        
         
         if (!$_POST['email']) {
             
@@ -32,18 +32,6 @@
             $error .= "A password is required<br>";
             
         } 
-
-        if (!$_POST['fullname']) {
-            
-            $error .= "A password is required<br>";
-            
-        } 
-
-        if (!$_POST['phone']) {
-            
-            $error .= "A password is required<br>";
-            
-        }                 
         
         if ($error != "") {
             
@@ -63,7 +51,7 @@
 
                 } else {
 
-                    $query = "INSERT INTO `user` (`email`, `password`, 'fullname', 'phone') VALUES ('".mysqli_real_escape_string($link, $_POST['email'])."', '".mysqli_real_escape_string($link, $_POST['password'])."', '".mysqli_real_escape_string($link, $_POST['fullname'])."',  '".mysqli_real_escape_string($link, $_POST['phone'])."')";
+                    $query = "INSERT INTO `user` (`email`, `password`) VALUES ('".mysqli_real_escape_string($link, $_POST['email'])."', '".mysqli_real_escape_string($link, $_POST['password'])."')";
 
                     if (!mysqli_query($link, $query)) {
 
@@ -125,10 +113,13 @@
                         
                     }
                     
-                }    
+                }
+            
         }
-           
+        
+        
     }
+
 
 ?>
 <?php include("header.php") ?>
