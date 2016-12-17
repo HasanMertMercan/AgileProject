@@ -1,5 +1,7 @@
 <?php 
 include("config.php");
+$error = "";    
+$message = ""; 
 
 if(isset($_POST['save'])) { 
 
@@ -7,33 +9,57 @@ if(isset($_POST['save'])) {
     $password_2 = mysqli_real_escape_string($db,$_POST['password_2']);
     $token = mysqli_real_escape_string($db,$_POST['token']);
 
-    if ($password_1 != $password_2) {
-        //alert
-        echo "şifreler uyuşmuyo";
-    } 
-    else {
+        if (!$_POST['password_1']) {
+            
+            $error .= "Please enter a new password.<br>";            
+        }     
 
-    $sql = "SELECT id FROM passwordTokens WHERE token = '$token'";
-    $result = mysqli_query($db,$sql);
-    $row = mysqli_fetch_array($result);
+        if (!$_POST['password_2']) {
+            
+            $error .= "Please confirm your new password<br>";            
+        }     
+        if ($error != "") {
 
-    if (!empty($row)) {
+            $error = "<p>There were error(s) in your form:</p>".$error;
+            
+        }    
+        else {
 
-          $sql2 = "UPDATE `users` SET password = '".md5(md5(mysqli_insert_id($db)).$_POST['password_1'])."' WHERE id= ".mysqli_insert_id($db)." LIMIT 1";
-          $result2 = mysqli_query($db,$sql2);        
+            if ($password_1 != $password_2) {
 
-         if ($result2) {
-             echo "şifre değişti";
-         }
+                    $error .= "Passwords do not match<br>";            
+            } 
+            else {
 
-         else {
-            echo "şifre değişme başarısız";
-         }
+            $sql = "SELECT id FROM passwordTokens WHERE token = '$token'";
+            $result = mysqli_query($db,$sql);
+            $row = mysqli_fetch_array($result);
 
-    } else {
-        echo "sorgu yanlıs";
-    }     
-  }    
+            if(!empty($row["id"])) {
+
+                    $salt = openssl_random_pseudo_bytes(20);
+                    $secured_password = sha1($password_1 . $salt);            
+
+                    $sql2 = "UPDATE users SET password = '$secured_password', salt= '$salt' WHERE '".$row['id']."'";
+                    $result2 = mysqli_query($db,$sql2);   
+
+                    if($result2) {
+
+                        if (!$error) {
+
+                        $message .= "Your password has been reset successfully!<br>";  
+
+                        }  
+                    }
+                    else 
+                    $error .= "Sorry, something went wrong<br>";            
+
+
+            } else {
+                    $error .= "Sorry, something went wrong<br>";            
+            }     
+          }                
+        }
 }
 
 ?>
@@ -53,11 +79,6 @@ if(isset($_POST['save'])) {
             width: 400px;
             margin-top: 260px;
         }
-
-        p {
-            color: white;
-        }
-
 
         html { 
               background: url(background.jpg) no-repeat center center fixed; 
@@ -84,6 +105,14 @@ if(isset($_POST['save'])) {
     <div class="container">
 
         <h1>Book Exchange</h1>
+
+            <div id="error"> <?php if($error!="") {
+
+              echo '<div class="alert alert-danger" role="alert">'.$error.'</div>';} ?> </div>    
+
+             <div id="message"> <?php if($message!="") {
+
+                echo '<div class="alert alert-success" role="alert">'.$message.'</div>';} ?> </div>              
 
             <form method="POST" action="<?php $_SERVER['PHP_SELF'];?>">
             <fieldset class="form-group">
