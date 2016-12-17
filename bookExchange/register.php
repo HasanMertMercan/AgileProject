@@ -39,64 +39,79 @@ if(isset($_POST['submit'])) {
         $password = mysqli_real_escape_string($db,$_POST['password']);
         $phone = mysqli_real_escape_string($db,$_POST['phone']);   
 
-        $sql = "INSERT INTO users (fullname, email, password, phone) VALUES ('$fullname', '$email', '$password', '$phone')";
+        if (strlen($phone) != 10 ) {
 
-        $result = mysqli_query($db,$sql);        
-
-          
-        if(! $result ) {
-          die('Could not enter data: ' . mysql_error());    
-          
+              $error .= "Please re-enter 10 digit phone number.<br>";
+                                     
         }
+        else {
 
-          $sql2 = "UPDATE `users` SET password = '".md5(md5(mysqli_insert_id($db)).$_POST['password'])."' WHERE id = ".mysqli_insert_id($db)." LIMIT 1";
-            $result2 = mysqli_query($db, $sql2);
+          if (strlen($password < 4)) {
 
+              $error .= "Your password must contain more than 4 characters.<br>";
+          }
 
+          else {
 
-        if ($result2) {
+            $salt = openssl_random_pseudo_bytes(20);
+            $secured_password = sha1($password . $salt);
 
-          $sql3 = "SELECT * FROM users WHERE email= '$email'";
-          $result3 = mysqli_query($db,$sql3);                      
-          $row = mysqli_fetch_array($result3);          
+            $sql = "INSERT INTO users (fullname, email, password, salt, phone) VALUES ('$fullname', '$email', '$secured_password', '$salt', '$phone')";
 
-          require("email.php");
+            $result = mysqli_query($db,$sql);        
 
-            $email = new email();
-            
-            $token = $email->generateToken(20);
-            
-            $sql4  = "INSERT INTO emailTokens (id, token) VALUES ('".$row['id']."', '$token')";
-            $result4 = mysqli_query($db,$sql4); 
-
-            if($result4) {
-
-              $details = array();
-              $details["subject"] = "Email comfirmation on Book Exchange";
-              $details["to"] = $row["email"];
-              $details["fromName"] = "Book Exchange Office";
-              $details["fromEmail"] = "ahmetsafasezgin@gmail.com";
               
+            if(! $result ) {
+              die('Could not enter data: ' . mysql_error());    
               
-              $template = $email->confirmationTemplate();
-              
-              $template = str_replace("{token}", $token, $template);
-              
-              $details["body"] = $template;
-              
-              $email->sendEmail($details);
+            }
 
-            }     else {
-              echo "token kaydedilemedi";
-            }           
-            
+            else {
 
-        } else {
+              $sql2 = "SELECT * FROM users WHERE email= '$email'";
+              $result2 = mysqli_query($db,$sql2);                      
+              $row = mysqli_fetch_array($result2);          
 
-           echo "kayıt oluşturulamadı";
-        }                          
-            
-            //header("Location: toLogin.php");
+              require("email.php");
+
+                $email = new email();
+                
+                $token = $email->generateToken(20);
+                
+                $sql3  = "INSERT INTO emailTokens (id, token) VALUES ('".$row['id']."', '$token')";
+                $result3 = mysqli_query($db,$sql3); 
+
+                if($result3) {
+
+                  $details = array();
+                  $details["subject"] = "Email comfirmation on Book Exchange";
+                  $details["to"] = $row["email"];
+                  $details["fromName"] = "Book Exchange Office";
+                  $details["fromEmail"] = "ahmetsafasezgin@gmail.com";
+                  
+                  
+                  $template = $email->confirmationTemplate();
+                  
+                  $template = str_replace("{token}", $token, $template);
+                  
+                  $details["body"] = $template;
+                  
+                  $email->sendEmail($details);
+
+                }     else {
+                  echo "token kaydedilemedi";
+                }           
+                
+            }                        
+                
+                header("Location: toLogin.php");
+            }            
+
+
+          }
+
+
+          
     }
       }
        ?>
@@ -184,7 +199,6 @@ if(isset($_POST['submit'])) {
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha384-3ceskX3iaEnIogmQchP8opvBy3Mi7Ce34nWjpBIwVTHfGYWQS9jwHDVRnpKKHJg7" crossorigin="anonymous"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min.js" integrity="sha384-XTs3FgkjiBgo8qjEjBk0tGmf3wPrWtA6coPfQDfFEY8AnYJwjalXCiosYRBIBZX8" crossorigin="anonymous"></script>
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js" integrity="sha384-BLiI7JTZm+JWlgKa0M0kGRpJbF2J8q+qreVrKBC47e3K6BW78kGLrCkeRX6I9RoK" crossorigin="anonymous"></script>     
-
 
   </body>
 </html>
