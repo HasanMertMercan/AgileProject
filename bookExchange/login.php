@@ -22,39 +22,79 @@ if(isset($_POST['login'])) {
             
             $error = "<p>There were error(s) in your form:</p>".$error;
             
-        } else {
+        } 
+
+        else {
 
             $email = mysqli_real_escape_string($db,$_POST['email']);
-            $password = mysqli_real_escape_string($db,$_POST['password']); 
-
+            $password = mysqli_real_escape_string($db,$_POST['password']);            
                   
             $sql = "SELECT * FROM users WHERE email = '$email'";
-            $result = mysqli_query($db,$sql);
-                               
+            $result = mysqli_query($db,$sql);                               
             $row = mysqli_fetch_array($result);
                             
             if (isset($row)) {
-                                    
-            $hashedPassword = md5(md5($row['id']).$_POST['password']);
-                                
-               if ($hashedPassword == $row['password']) {
-            
+
+            $secured_password = $row["password"];
+            $salt = $row["salt"];   
+                                                                    
+              if ($secured_password == sha1($password . $salt)) {
+
+                    $sql2 = "SELECT * FROM  users WHERE email = '$email' AND emailConfirmed = '1' AND isActive = '1' ";
+                    $result2 = mysqli_query($db,$sql2);                               
+                    $row2 = mysqli_fetch_array($result2);
+
+                   if (isset($row2)) { 
+
                      $_SESSION['valid'] = true;
                      $_SESSION['timeout'] = time();
                      $_SESSION['email'] = '$email'; 
-                     header("Location: home.php");
+                     header("Location: home.php");                    
+
+                   }  
+
+                   else {
+
+                    $sql3 = "SELECT * FROM  users WHERE email = '$email' AND isActive = '0'";
+                    $result3 = mysqli_query($db,$sql3);                               
+                    $row3 = mysqli_fetch_array($result3); 
+
+                    if (isset($row3)) { 
+
+                    $error = "Your account has been banned! Sorry.<br>";
+              
+                     } // isActive = 0
+
+                     else {
+
+                        $sql4 = "SELECT * FROM  users WHERE email = '$email' AND emailConfirmed = '0'";
+                        $result4 = mysqli_query($db,$sql4);                               
+                        $row4 = mysqli_fetch_array($result4);      
+
+                        if (isset($row4)) { 
+
+                        $error = "Please confirm your email address.<br>";
+
+                        }
+
+                     } // isActive = 1 , emailConfirmed = 0
+
+                   } // emailConfirmed || isActive
 
                   } else {       
 
                       $error = "That email/password combination could not be found.<br>";                          
                  }
                             
-              }else {
+              }
+
+
+              else {
                                 
                   $error = "That email/password combination could not be found.<br>";                        
           }  
-        }
 
+        }
    }
 ?>
 
