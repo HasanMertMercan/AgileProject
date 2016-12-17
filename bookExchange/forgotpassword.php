@@ -1,55 +1,73 @@
 <?php 
-
 include("config.php");
+$error = "";    
+$message = "";    
 
 if(isset($_POST['send'])) {
 
-    $email = mysqli_real_escape_string($db,$_POST['email']);
+        
+        if (!$_POST['email']) {
+            
+            $error .= "An email address is required<br>";            
+        }     
 
-    $sql = "SELECT * FROM users WHERE email= '$email'";
-    $result = mysqli_query($db,$sql);                      
-    $row = mysqli_fetch_array($result);
+        if ($error != "") {
 
+            $error = "<p>There were error(s) in your form:</p>".$error;
+            
+        }
 
-    if (empty($row)) {
-      echo "Email not found";
-    }
-
-    require("email.php");
-
-    $email = new email();
-
-    $token = $email->generateToken(20);
-
-    $sql2  = "INSERT INTO passwordTokens (id, token) VALUES ('".$row['id']."', '$token')";
-    $result2 = mysqli_query($db,$sql2);                      
+        else {
 
 
-    if ($result2) {
+          $email = mysqli_real_escape_string($db,$_POST['email']);
 
-      echo "token kaydedildi.";
-
-      $details = array();
-      $details["subject"] = "Password reset request on Book Exchange";
-      $details["to"] = $row["email"];
-      $details["fromName"] = "Book Exchange Office";
-      $details["fromEmail"] = "ahmetsafasezgin@gmail.com";
+          $sql = "SELECT * FROM users WHERE email= '$email'";
+          $result = mysqli_query($db,$sql);                      
+          $row = mysqli_fetch_array($result);
 
 
+          if (empty($row)) {
 
-      $template = $email->resetPasswordTemplate();
-      $template = str_replace("{token}", $token, $template);
-      $details["body"] = $template;
+            $error .= "Email not found<br>";            
+          }
 
-      $email->sendEmail($details);
-      
+          require("email.php");
+
+          $email = new email();
+
+          $token = $email->generateToken(20);
+
+          $sql2  = "INSERT INTO passwordTokens (id, token) VALUES ('".$row['id']."', '$token')";
+          $result2 = mysqli_query($db,$sql2);                      
 
 
-    } else {
+          if ($result2) {
 
-      echo "token HATA DB KAYIT OLMADI";
-    }
-                
+            $details = array();
+            $details["subject"] = "Password reset request on Book Exchange";
+            $details["to"] = $row["email"];
+            $details["fromName"] = "Book Exchange Office";
+            $details["fromEmail"] = "ahmetsafasezgin@gmail.com";
+
+            $template = $email->resetPasswordTemplate();
+            $template = str_replace("{token}", $token, $template);
+            $details["body"] = $template;
+
+            $email->sendEmail($details);
+
+
+            if (!$error) {
+
+            $message .= "Please check your email address to reset your password.<br>";  
+
+            }                    
+
+          } else {
+
+            $error .= "User with this token is not found<br>";            
+          }          
+   }                     
  }
  ?>
 <!DOCTYPE html>
@@ -68,11 +86,6 @@ if(isset($_POST['send'])) {
             margin-top: 230px;
         }
 
-        p {
-            color: white;
-        }
-
-
         html { 
               background: url(background.jpg) no-repeat center center fixed; 
               -webkit-background-size: cover;
@@ -87,9 +100,13 @@ if(isset($_POST['send'])) {
         h1{
             color: white;
         } 
-        #message {
-            color: white;
-        }      
+
+        #loginLink {
+
+          color: white;
+          text-decoration: underline;
+          font-style: italic;
+        }        
     </style>
   </head>
   <body>
@@ -97,11 +114,15 @@ if(isset($_POST['send'])) {
 
         <h1>Book Exchange</h1>
 
+            <div id="error"> <?php if($error!="") {
 
+              echo '<div class="alert alert-danger" role="alert">'.$error.'</div>';} ?> </div>    
 
-        <div class="alert alert-success" >
-           <strong>Forgot your Password?</strong> Enter your email address and we'll help you reset your password.
-        </div>  
+       <div id="message"> <?php if($message!="") {
+
+                echo '<div class="alert alert-success" role="alert">'.$message.'</div>';} ?> </div>                     
+
+      <div class="card card-block"> <h4 class="card-title">Forgot your Password?</h4> <p class="card-text">Enter your email address and we'll help you reset your password.</p></div>         
 
              <form method="post">      
             <fieldset class="form-group">
@@ -111,6 +132,7 @@ if(isset($_POST['send'])) {
             <fieldset class="form-group">
                 <input class="btn btn-success" type="submit" name="send" value="Send">               
             </fieldset>  
+                 <a id="loginLink" href="login.php" >Click to Login!</a>
 
             </form>
     </div>
