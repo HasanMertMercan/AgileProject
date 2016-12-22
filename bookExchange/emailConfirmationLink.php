@@ -1,5 +1,6 @@
 <?php
 include("config.php");
+
 if (empty($_GET["token"])) {
     echo 'Missing required information';
     return;
