@@ -48,8 +48,8 @@ if(isset($_POST['login'])) {
 
                      $_SESSION['valid'] = true;
                      $_SESSION['timeout'] = time();
-                     $_SESSION['email'] = '$email'; 
-                     header("Location: home.php");                    
+                     $_SESSION['email'] = $email;
+                     header("Location: searchBook.php");                    
 
                    }  
 
@@ -173,7 +173,7 @@ if(isset($_POST['login'])) {
                 <input class="btn btn-success" type="submit" name="login" value="Login">               
             </fieldset>  
                  <a id="forgotPasswordLink" href="forgotpassword.php">Forgot your password?</a>
-                 <p style="color: white;">Don't you have an account? <a id="registerLink" href="register.php" >Click to Register!</a></p>              
+                 <p style="color: white;">Don't you have an account? <a id="registerLink" href="register.php" >Click to Register!</a></p>  
             </form>
           </div>
 
